@@ -1,0 +1,104 @@
+name: Deploy .NET 9 to Firebase Hosting
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore MyNorthwind/MyNorthwind.csproj
+
+    - name: Build the application
+      run: dotnet build MyNorthwind/MyNorthwind.csproj --no-restore --configuration Release
+
+    - name: Publish the application
+      run: dotnet publish MyNorthwind/MyNorthwind.csproj --no-build --configuration Release --output ./publish
+
+    - name: Create static files for Firebase
+      run: |
+        # Create a simple HTML file that will serve your API
+        mkdir -p ./firebase-public
+        cat > ./firebase-public/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>MyNorthwind API</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                .container { max-width: 800px; margin: 0 auto; }
+                .endpoint { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+                .method { font-weight: bold; color: #007acc; }
+                .url { font-family: monospace; background: #e0e0e0; padding: 2px 5px; border-radius: 3px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>MyNorthwind API</h1>
+                <p>Welcome to the MyNorthwind API. This is a .NET 9 Web API with Firebase integration.</p>
+                
+                <h2>Available Endpoints:</h2>
+                <div class="endpoint">
+                    <span class="method">GET</span> <span class="url">/api/customers</span> - Get all customers (paginated)
+                </div>
+                <div class="endpoint">
+                    <span class="method">GET</span> <span class="url">/api/customers/{id}</span> - Get customer by ID
+                </div>
+                <div class="endpoint">
+                    <span class="method">POST</span> <span class="url">/api/customers</span> - Create new customer
+                </div>
+                <div class="endpoint">
+                    <span class="method">GET</span> <span class="url">/api/orders</span> - Get all orders (paginated)
+                </div>
+                <div class="endpoint">
+                    <span class="method">POST</span> <span class="url">/api/orders</span> - Create new order
+                </div>
+                <div class="endpoint">
+                    <span class="method">POST</span> <span class="url">/api/device/register</span> - Register device token
+                </div>
+                
+                <h2>API Documentation:</h2>
+                <p>For interactive API documentation, visit: <a href="/swagger" target="_blank">Swagger UI</a></p>
+                
+                <h2>Features:</h2>
+                <ul>
+                    <li>RESTful API for Northwind database entities</li>
+                    <li>Firebase Cloud Messaging integration</li>
+                    <li>Device token management</li>
+                    <li>Pagination support</li>
+                    <li>Push notifications for order creation</li>
+                </ul>
+            </div>
+        </body>
+        </html>
+        EOF
+
+    - name: Setup Firebase CLI
+      uses: w9jds/firebase-action@master
+      with:
+        args: deploy --only hosting
+      env:
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+    - name: Deploy to Firebase Hosting
+      run: |
+        firebase deploy --only hosting --project ${{ env.FIREBASE_PROJECT_ID }} 
