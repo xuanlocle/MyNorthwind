@@ -11,6 +11,8 @@ A modern .NET 9 Web API application that provides a RESTful interface for managi
 - **Entity Framework Core**: Modern ORM with SQL Server support
 - **Swagger Documentation**: Interactive API documentation
 - **JSON Serialization**: Optimized with circular reference handling
+- **Docker Support**: Complete containerization with development and production setups
+- **Multiple Deployment Options**: Docker, Firebase Hosting, Google Cloud Run
 
 ## 🏗️ Architecture
 
@@ -19,24 +21,51 @@ A modern .NET 9 Web API application that provides a RESTful interface for managi
 - **API Documentation**: Swagger/OpenAPI
 - **Push Notifications**: Firebase Cloud Messaging
 - **Architecture Pattern**: Controller-based REST API
+- **Containerization**: Docker with multi-stage builds
+- **Deployment**: Multiple cloud platform support
 
 ## 📋 Prerequisites
 
 - .NET 9 SDK
 - SQL Server (local or cloud)
 - Firebase project with service account credentials
+- Docker Desktop (for containerized deployment)
 
-## 🛠️ Setup Instructions
+## 🛠️ Quick Start
 
-### 1. Clone the Repository
+### Option 1: Docker (Recommended)
 
+#### Development with Hot Reload
+```bash
+# Clone the repository
+git clone <repository-url>
+cd MyNorthwind
+
+# Start development environment
+docker-compose -f docker-compose.dev.yml up -d
+
+# Access your API
+curl http://localhost:8080/api/customers
+```
+
+#### Production Deployment
+```bash
+# Start production stack
+docker-compose up -d --build
+
+# Access your API
+curl http://localhost:8080/api/customers
+```
+
+### Option 2: Local Development
+
+#### 1. Clone the Repository
 ```bash
 git clone <repository-url>
 cd MyNorthwind
 ```
 
-### 2. Environment Configuration
-
+#### 2. Environment Configuration
 Create environment variables or use a configuration file:
 
 ```bash
@@ -47,16 +76,14 @@ CONNECTION_SQL="Server=your-server;Database=Northwind;Trusted_Connection=true;Tr
 SERVICE_ACCOUNT_PATH="/path/to/your/firebase-service-account.json"
 ```
 
-### 3. Database Setup
-
+#### 3. Database Setup
 Ensure your SQL Server instance is running and the Northwind database is available. The application expects the following tables:
 - `Customers`
 - `Orders`
 - `OrderDetails`
 - `DeviceTokens`
 
-### 4. Firebase Setup
-
+#### 4. Firebase Setup
 1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
 2. Generate a service account key:
    - Go to Project Settings > Service Accounts
@@ -64,8 +91,7 @@ Ensure your SQL Server instance is running and the Northwind database is availab
    - Save the JSON file securely
    - Set the `SERVICE_ACCOUNT_PATH` environment variable to point to this file
 
-### 5. Run the Application
-
+#### 5. Run the Application
 ```bash
 cd MyNorthwind
 dotnet restore
@@ -75,6 +101,64 @@ dotnet run
 The API will be available at:
 - **API**: https://localhost:7000
 - **Swagger UI**: https://localhost:7000/swagger
+
+## 🐳 Docker Hosting
+
+### Development Environment
+```bash
+# Start with hot reload
+docker-compose -f docker-compose.dev.yml up -d
+
+# Access points:
+# API: http://localhost:8080
+# Swagger: http://localhost:8080/swagger
+# Database Admin: http://localhost:8081 (Adminer)
+```
+
+### Production Environment
+```bash
+# Start production stack
+docker-compose up -d --build
+
+# Access points:
+# API: http://localhost:8080
+# Swagger: http://localhost:8080/swagger
+```
+
+### Database Management
+```bash
+# Access Adminer (development)
+# Open http://localhost:8081
+# Server: sqlserver
+# Username: sa
+# Password: YourStrong@Passw0rd
+# Database: Northwind
+```
+
+### Docker Features
+- **Hot Reload**: Code changes auto-reload in development
+- **Database**: SQL Server 2022 with sample data
+- **Adminer**: Web-based database management
+- **Health Checks**: Container monitoring
+- **Persistent Storage**: Database data survives restarts
+
+For detailed Docker setup, see [DOCKER_HOSTING.md](DOCKER_HOSTING.md).
+
+## ☁️ Cloud Deployment
+
+### Google Cloud Run (Recommended for APIs)
+```bash
+# Deploy to Google Cloud Run
+# See .github/workflows/deploy-to-cloud-run.yml
+```
+
+### Firebase Hosting (Static Documentation)
+```bash
+# Deploy static documentation
+# See .github/workflows/deploy-to-firebase.yml
+```
+
+For detailed deployment guides, see [DEPLOYMENT.md](DEPLOYMENT.md) and [FIREBASE_SETUP.md](FIREBASE_SETUP.md).
 
 ## 📚 API Documentation
 
@@ -229,8 +313,18 @@ Paginated endpoints include pagination metadata in the `X-Pagination` header:
 
 ## 🧪 Testing
 
-Use the provided HTTP file for testing:
+### Docker Environment
+```bash
+# Test API endpoints
+curl http://localhost:8080/api/customers
+curl http://localhost:8080/api/orders
+curl http://localhost:8080/swagger
 
+# Test with pagination
+curl "http://localhost:8080/api/customers?pageNumber=1&pageSize=5"
+```
+
+### Local Environment
 ```bash
 # Test customers endpoint
 GET http://localhost:5100/api/customers/
@@ -255,6 +349,102 @@ Configure your SQL Server connection string in the `CONNECTION_SQL` environment 
 ### Firebase Configuration
 Set the `SERVICE_ACCOUNT_PATH` environment variable to point to your Firebase service account JSON file.
 
+### Docker Configuration
+- **Development**: Uses `docker-compose.dev.yml` with hot reload
+- **Production**: Uses `docker-compose.yml` with optimized images
+- **Database**: SQL Server 2022 with persistent storage
+
+## 🚀 Deployment Options
+
+### 1. Docker (Local/On-Premises)
+- **Best for**: Development, testing, on-premises deployment
+- **Features**: Complete stack with database, hot reload, admin tools
+- **Setup**: `docker-compose up -d`
+
+### 2. Google Cloud Run (Cloud)
+- **Best for**: Production APIs, auto-scaling, serverless
+- **Features**: Pay-per-use, auto-scaling, managed infrastructure
+- **Setup**: GitHub Actions deployment
+
+### 3. Firebase Hosting (Static)
+- **Best for**: Documentation, static sites
+- **Features**: Fast CDN, global distribution
+- **Setup**: GitHub Actions deployment
+
+## 🔍 Monitoring and Debugging
+
+### Docker Environment
+```bash
+# Check container status
+docker ps
+
+# View logs
+docker logs mynorthwind-api
+docker logs mynorthwind-db
+
+# Execute commands in containers
+docker exec -it mynorthwind-api bash
+```
+
+### Database Operations
+```bash
+# Connect to database (Docker)
+docker exec -it mynorthwind-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -d Northwind
+
+# Run SQL commands
+docker exec -it mynorthwind-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -d Northwind -Q "SELECT * FROM Customers"
+```
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+#### Docker Issues
+- **Port conflicts**: Change ports in docker-compose files
+- **Memory issues**: Increase Docker Desktop memory limit
+- **Permission issues**: Check file permissions for volumes
+
+#### Database Issues
+- **Connection failed**: Verify connection string and SQL Server status
+- **Missing tables**: Run database initialization script
+
+#### Firebase Issues
+- **Authentication failed**: Check service account key path
+- **Push notifications not working**: Verify FCM configuration
+
+### Debug Commands
+```bash
+# Check container health
+docker-compose ps
+
+# View detailed logs
+docker-compose logs -f api
+
+# Reset everything
+docker-compose down -v
+docker-compose up -d --build
+```
+
+## 📈 Performance Optimization
+
+### Docker Optimizations
+- **Multi-stage builds**: Smaller production images
+- **Volume mounts**: Faster development builds
+- **Health checks**: Automatic container monitoring
+
+### API Optimizations
+- **Pagination**: Efficient data retrieval
+- **Lazy loading**: Optimized Entity Framework queries
+- **Caching**: Redis support in development
+
+## 🔐 Security Best Practices
+
+1. **Environment Variables**: Use secrets for sensitive data
+2. **Database Security**: Change default passwords
+3. **Firebase Security**: Secure service account keys
+4. **Container Security**: Non-root users, minimal images
+5. **Network Security**: Restrict container communication
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -272,4 +462,15 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 For support and questions:
 - Create an issue in the repository
 - Check the Swagger documentation at `/swagger`
-- Review the API examples in `MyNorthwind.http` 
+- Review the deployment guides:
+  - [DOCKER_HOSTING.md](DOCKER_HOSTING.md)
+  - [DEPLOYMENT.md](DEPLOYMENT.md)
+  - [FIREBASE_SETUP.md](FIREBASE_SETUP.md)
+
+## 📚 Additional Resources
+
+- [.NET 9 Documentation](https://docs.microsoft.com/en-us/dotnet/)
+- [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/)
+- [Firebase Documentation](https://firebase.google.com/docs)
+- [Docker Documentation](https://docs.docker.com/)
+- [Google Cloud Run](https://cloud.google.com/run/docs) 

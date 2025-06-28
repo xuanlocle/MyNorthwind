@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # SQL Server Database (Development)
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mynorthwind-db-dev
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data_dev:/var/opt/mssql
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - mynorthwind-network-dev
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -Q 'SELECT 1'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # .NET 9 Web API (Development with hot reload)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: mynorthwind-api-dev
+    ports:
+      - "8080:8080"
+      - "5000:5000"  # HTTPS
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CONNECTION_SQL=Server=sqlserver;Database=Northwind;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;
+      - SERVICE_ACCOUNT_PATH=/app/firebase/serviceAccountKey.json
+      - ASPNETCORE_URLS=http://+:8080;https://+:5000
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    volumes:
+      - ./MyNorthwind:/app/src:ro
+      - ./firebase:/app/firebase:ro
+      - /app/src/bin
+      - /app/src/obj
+    networks:
+      - mynorthwind-network-dev
+    restart: unless-stopped
+    command: dotnet watch run --project /app/src/MyNorthwind.csproj
+
+  # Redis Cache (Optional - for session storage)
+  redis:
+    image: redis:7-alpine
+    container_name: mynorthwind-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - mynorthwind-network-dev
+    profiles:
+      - cache
+
+  # Adminer (Database management tool)
+  adminer:
+    image: adminer:latest
+    container_name: mynorthwind-adminer
+    ports:
+      - "8081:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=sqlserver
+    depends_on:
+      - sqlserver
+    networks:
+      - mynorthwind-network-dev
+    profiles:
+      - tools
+
+volumes:
+  sqlserver_data_dev:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  mynorthwind-network-dev:
+    driver: bridge 
