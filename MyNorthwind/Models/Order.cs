@@ -6,7 +6,7 @@ namespace MyNorthwind.Models;
 public partial class Order
 {
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.None)]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int OrderId { get; set; }
 
     public string? CustomerId { get; set; }
