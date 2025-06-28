@@ -9,7 +9,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "CONNECTION_SQL": "Server=localhost,1433;Database=Northwind;User Id=sa;Password=5[YcOfU5gt#U44^K1(;TrustServerCertificate=True;",
-        "SERVICE_ACCOUNT_PATH": "file.json"
+        "SERVICE_ACCOUNT_PATH": "/Users/darrenle/Documents/mynorthwind-6cfb1-firebase-adminsdk-fbsvc-cc7c461f5a.json"
       }
     },
     "https": {

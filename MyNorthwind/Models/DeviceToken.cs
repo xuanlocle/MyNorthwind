@@ -3,10 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyNorthwind.Models;
 
-public class DeviceToken
+public partial class DeviceToken
 {
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.None)]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int DeviceTokenId { get; set; }
 
     // FCM device token to send push notifications

@@ -79,22 +79,29 @@ public class OrdersController : ControllerBase
         {
             return BadRequest("Customer not found.");
         }
-        
+
         _db.Orders.Add(order);
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
 
-        var deviceTokens = await _db.DeviceTokens.ToListAsync();
+            var deviceTokens = await _db.DeviceTokens.ToListAsync();
 
-        // Send notification to all devices
-        await FirebaseService.SendPushNotificationAsync(
-            deviceTokens.ConvertAll(e => e.Token), // FCM device token
-            "New Order Created", // Notification title
-            $"Order {order.OrderId} has been created successfully.", // Notification body
-            customer.CustomerId
-        );
+            // Send notification to all devices
+            await FirebaseService.SendPushNotificationAsync(
+                deviceTokens.ConvertAll(e => e.Token), // FCM device token
+                "New Order Created", // Notification title
+                $"Order {order.OrderId} has been created successfully.", // Notification body
+                customer.CustomerId
+            );
 
-        // Return the created order with a location header pointing to the new order
-        return CreatedAtAction(nameof(Get), new { id = order.OrderId }, order);
+            // Return the created order with a location header pointing to the new order
+            return CreatedAtAction(nameof(Get), new { id = order.OrderId }, order);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 
     // Update an existing order

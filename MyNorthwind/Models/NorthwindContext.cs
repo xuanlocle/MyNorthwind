@@ -42,7 +42,9 @@ public partial class NorthwindContext : DbContext
             .WithMany(c => c.Orders)
             .HasForeignKey(o => o.CustomerId)
             .OnDelete(DeleteBehavior.SetNull);
-
+        
+        modelBuilder.Entity<DeviceToken>()
+            .HasKey(d => d.DeviceTokenId); 
         OnModelCreatingPartial(modelBuilder);
     }
 
